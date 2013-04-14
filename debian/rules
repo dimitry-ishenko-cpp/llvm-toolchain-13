@@ -139,7 +139,10 @@ override_dh_auto_configure: debian/lldb-$(LLVM_VERSION).install debian/lldb-$(LL
 	-DCMAKE_INSTALL_PREFIX=/usr/lib/llvm-$(LLVM_VERSION) \
 	-DCMAKE_VERBOSE_MAKEFILE=ON \
 	-DBUILD_SHARED_LIBS=ON \
-	-DLLVM_ENABLE_FFI=ON
+	-DLLVM_ENABLE_FFI=ON \
+	-DFFI_INCLUDE_DIR=/usr/include/$(DEB_HOST_MULTIARCH) \
+	-DFFI_LIBRARY_DIR=/usr/lib/$(DEB_HOST_MULTIARCH)
+
 #	mkdir build-compiler-rt && cd build-compiler-rt && cmake ../compiler-rt
 
 override_dh_auto_build:
