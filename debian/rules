@@ -135,7 +135,11 @@ override_dh_auto_configure: debian/lldb-$(LLVM_VERSION).install debian/lldb-$(LL
 	# CLANG_VENDOR=$(VENDOR) || { cat config.log tools/polly/config.log; exit 1; }
 #	cd $(TARGET_BUILD) && cmake ../ -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_VERBOSE_MAKEFILE=ON
 #	mkdir build-compiler-rt && cd build-compiler-rt && cmake ../compiler-rt
-	cd $(TARGET_BUILD) && cmake ../ -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_VERBOSE_MAKEFILE=ON
+	cd $(TARGET_BUILD) && cmake ../ \
+	-DCMAKE_INSTALL_PREFIX=/usr/lib/llvm-$(LLVM_VERSION) \
+	-DCMAKE_VERBOSE_MAKEFILE=ON \
+	-DBUILD_SHARED_LIBS=ON \
+	-DLLVM_ENABLE_FFI=ON
 #	mkdir build-compiler-rt && cd build-compiler-rt && cmake ../compiler-rt
 
 override_dh_auto_build:
