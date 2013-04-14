@@ -153,7 +153,7 @@ override_dh_auto_install:
 	mv $(CURDIR)/debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/libLLVM-$(LLVM_VERSION)*.so $(CURDIR)/debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/libLLVM-$(LLVM_VERSION).so.$(SONAME_EXT)
 	mv $(CURDIR)/debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/liblldb.so $(CURDIR)/debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/liblldb.so.$(SONAME_EXT)
 
-	cd debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/ && mv libclang.so libclang.so.$(SONAME_EXT) && ln -s libclang.so.$(SONAME_EXT) libclang.so
+#	cd debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/ && mv libclang.so libclang.so.$(SONAME_EXT) && ln -s libclang.so.$(SONAME_EXT) libclang.so
 #	cd $(TARGET_BUILD)/tools/clang/runtime/compiler-rt/ && rm -rf $$(find . -iname "SubDir.lib*" -o -iname .dir) && rm -rf $$(find -empty)
 
 	mkdir -p $(CURDIR)/debian/clang-$(LLVM_VERSION)/usr/bin/
@@ -209,14 +209,13 @@ override_dh_auto_test:
 # LLVM tests
 	$(MAKE) -C $(TARGET_BUILD) check || true
 # clang tests
-	cd build-llvm/ && $(MAKE) -C tools/clang/ test || true
+	$(MAKE) clang-test || true
 # lldb tests
-	cd build-llvm/Release/lib/python2.7/site-packages/lldb && if test ! -h _lldb.so -o ! -f _lldb.so; then ln -s ../../../liblldb.so _lldb.so; fi
-	cd build-llvm/ && $(MAKE) -C tools/lldb/test || true
+	$(MAKE) check-lldb || true
 # Managed by debian build system
 	rm -f $(CURDIR)/build-llvm/Release/lib/python*/site-packages/lldb/_lldb.so
 # polly tests
-	cd build-llvm/ && $(MAKE) polly-test -C tools/polly/test/ || true
+	$(MAKE) polly-test || true
 
 	if test "$(CODECOVERAGE)" = "yes"; then \
 		mkdir -p reports/; \
