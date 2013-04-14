@@ -209,13 +209,13 @@ override_dh_auto_test:
 # LLVM tests
 	$(MAKE) -C $(TARGET_BUILD) check || true
 # clang tests
-	$(MAKE) clang-test || true
+	$(MAKE) -C $(TARGET_BUILD) clang-test || true
 # lldb tests
-	$(MAKE) check-lldb || true
+	$(MAKE) -C $(TARGET_BUILD) check-lldb || true
 # Managed by debian build system
 	rm -f $(CURDIR)/build-llvm/Release/lib/python*/site-packages/lldb/_lldb.so
 # polly tests
-	$(MAKE) polly-test || true
+	$(MAKE) -C $(TARGET_BUILD) polly-test || true
 
 	if test "$(CODECOVERAGE)" = "yes"; then \
 		mkdir -p reports/; \
