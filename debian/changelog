@@ -1,3 +1,12 @@
+llvm-toolchain-3.2 (1:3.2repack-2) unstable; urgency=low
+
+  * Do not depend on libobjc-4.7-dev & libgcc-4.7-dev.
+    They are still only in experimental
+  * Disable the usage of binutils-gold under [powerpc powerpcspe ppc64 sparc
+    sparc64] to fix FTBFS
+
+ -- Sylvestre Ledru <sylvestre@debian.org>  Tue, 07 May 2013 13:15:20 +0200
+
 llvm-toolchain-3.2 (1:3.2repack-1) unstable; urgency=low
 
   * Upload to unstable
