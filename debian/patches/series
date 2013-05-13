@@ -35,5 +35,6 @@ declare_clear_cache.diff
 0103-DAGCombiner-Avoid-generating-illegal-vector-INT_TO_F.patch
 33-armhf-defaults.diff
 34-powerpc-no-altivec.diff
-
 clang-fix-std-thread.diff
+kfreebsd-hurd-lldb.diff
+
