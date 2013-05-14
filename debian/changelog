@@ -1,15 +1,16 @@
 llvm-toolchain-3.2 (1:3.2repack-3) unstable; urgency=low
 
-  * Enable back the r600 backend (Closes: #708009)
   * Before the configure, show which version of CC is being used.
   * Add support of kfreebsd and hurd in lldb (kfreebsd-hurd-lldb.diff)
   * Force the usage of gcc 4.7 for all archs. Should fix some FTBFS
     (Closes: #707866)
+  * Fix the symlink on clang++.1.gz llvm-clang.1.gz (Closes: #707832)
 
   [ Jon Severinsson ]
   * Re-enable the r600 backend and update it to the mesa-9.1.1 tag.
+   (Closes: #708009)
 
- -- Sylvestre Ledru <sylvestre@debian.org>  Tue, 14 May 2013 11:17:42 +0200
+ -- Sylvestre Ledru <sylvestre@debian.org>  Tue, 14 May 2013 12:10:07 +0200
 
 llvm-toolchain-3.2 (1:3.2repack-2) unstable; urgency=low
 
