@@ -28,11 +28,13 @@ scan-build-clang-path.diff
 0050-powerpcspe-fp.diff
 polly-c++0x.diff
 declare_clear_cache.diff
-#r600-snapshot.diff
 31-powerpcspe.diff
 0101-LegalizeDAG-Allow-type-promotion-for-scalar-stores.patch
 0102-LegalizeDAG-Allow-type-promotion-of-scalar-loads.patch
 0103-DAGCombiner-Avoid-generating-illegal-vector-INT_TO_F.patch
+r600-snapshot.diff
+r600-9.1.1.patch
+r600-c++0x.patch
 33-armhf-defaults.diff
 34-powerpc-no-altivec.diff
 clang-fix-std-thread.diff
