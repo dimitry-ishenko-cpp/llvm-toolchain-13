@@ -42,3 +42,5 @@ kfreebsd-hurd-lldb.diff
 lldb-hurd.diff
 lldb-user-remove.diff
 lldb-apple_only.diff
+kfreebsd-thread.diff
+
