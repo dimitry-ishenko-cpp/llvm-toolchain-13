@@ -39,4 +39,6 @@ r600-c++0x.patch
 34-powerpc-no-altivec.diff
 clang-fix-std-thread.diff
 kfreebsd-hurd-lldb.diff
-
+lldb-hurd.diff
+lldb-user-remove.diff
+lldb-apple_only.diff
