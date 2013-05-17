@@ -1,7 +1,7 @@
-Index: llvm-toolchain-3.2-3.2repack/tools/lldb/source/Host/common/Host.cpp
+Index: llvm-toolchain-3.2-3.2repack/lldb/source/Host/common/Host.cpp
 ===================================================================
---- llvm-toolchain-3.2-3.2repack.orig/tools/lldb/source/Host/common/Host.cpp	2013-05-15 15:22:39.545049856 +0200
-+++ llvm-toolchain-3.2-3.2repack/tools/lldb/source/Host/common/Host.cpp	2013-05-15 15:23:19.313049821 +0200
+--- llvm-toolchain-3.2-3.2repack.orig/lldb/source/Host/common/Host.cpp	2013-05-15 15:22:39.545049856 +0200
++++ llvm-toolchain-3.2-3.2repack/lldb/source/Host/common/Host.cpp	2013-05-15 15:23:19.313049821 +0200
 @@ -42,9 +42,8 @@
  #include <mach/mach_port.h>
  #include <sys/sysctl.h>
