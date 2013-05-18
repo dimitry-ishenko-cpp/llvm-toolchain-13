@@ -69,12 +69,12 @@ override_dh_auto_configure: debian/lldb-$(LLVM_VERSION).install debian/lldb-$(LL
     fi; \
     ln -s ../polly .
 
-	if $(LLDB_ENABLE) == yes; then
+	if test $(LLDB_ENABLE) = yes; then \
 		cd tools/ && \
 		if test -h lldb; then \
 			rm lldb; \
 		fi; \
-		ln -s ../lldb .
+		ln -s ../lldb .; \
 	fi
 
 
@@ -122,8 +122,8 @@ override_dh_auto_install:
 	$(MAKE) -C $(TARGET_BUILD)  VERBOSE=1  install DESTDIR=$(CURDIR)/debian/tmp/
 	chrpath -d `find $(CURDIR)/debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/bin/ -type f -executable`
 	mv $(CURDIR)/debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/libLLVM-$(LLVM_VERSION)*.so $(CURDIR)/debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/libLLVM-$(LLVM_VERSION).so.$(SONAME_EXT)
-	if $(LLDB_ENABLE) == yes; then
-		mv $(CURDIR)/debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/liblldb.so $(CURDIR)/debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/liblldb.so.$(SONAME_EXT)
+	if test $(LLDB_ENABLE) = yes; then \
+		mv $(CURDIR)/debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/liblldb.so $(CURDIR)/debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/liblldb.so.$(SONAME_EXT); \
 	fi
 
 	cd debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/ && mv libclang.so libclang.so.$(SONAME_EXT) && ln -s libclang.so.$(SONAME_EXT) libclang.so
