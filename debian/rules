@@ -35,6 +35,11 @@ ifneq (,$(findstring $(DEB_HOST_ARCH),armel))
   opt_flags += -marm
 endif
 
+LLDB_ARCHS := amd64 i386
+LLDB_ENABLE=no
+ifneq (,$(findstring $(DEB_HOST_ARCH),$(LLDB_ARCHS)))
+	LLDB_ENABLE=yes
+endif
 
 %:
 	dh $@
@@ -59,14 +64,18 @@ override_dh_auto_configure: debian/lldb-$(LLVM_VERSION).install debian/lldb-$(LL
 	fi; \
     ln -s ../clang .; \
 	readlink clang; \
-	if test -h lldb; then \
-		rm lldb; \
-	fi; \
-    ln -s ../lldb .; \
     if test -h polly; then \
         rm polly; \
     fi; \
-    ln -s ../polly .; \
+    ln -s ../polly .
+
+	if $(LLDB_ENABLE) == yes; then
+		cd tools/ && \
+		if test -h lldb; then \
+			rm lldb; \
+		fi; \
+		ln -s ../lldb .
+	fi
 
 
 	cd projects/ && \
@@ -113,7 +122,9 @@ override_dh_auto_install:
 	$(MAKE) -C $(TARGET_BUILD)  VERBOSE=1  install DESTDIR=$(CURDIR)/debian/tmp/
 	chrpath -d `find $(CURDIR)/debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/bin/ -type f -executable`
 	mv $(CURDIR)/debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/libLLVM-$(LLVM_VERSION)*.so $(CURDIR)/debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/libLLVM-$(LLVM_VERSION).so.$(SONAME_EXT)
-	mv $(CURDIR)/debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/liblldb.so $(CURDIR)/debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/liblldb.so.$(SONAME_EXT)
+	if $(LLDB_ENABLE) == yes; then
+		mv $(CURDIR)/debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/liblldb.so $(CURDIR)/debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/liblldb.so.$(SONAME_EXT)
+	fi
 
 	cd debian/tmp/usr/lib/llvm-$(LLVM_VERSION)/lib/ && mv libclang.so libclang.so.$(SONAME_EXT) && ln -s libclang.so.$(SONAME_EXT) libclang.so
 #	cd $(TARGET_BUILD)/tools/clang/runtime/compiler-rt/ && rm -rf $$(find . -iname "SubDir.lib*" -o -iname .dir) && rm -rf $$(find -empty)

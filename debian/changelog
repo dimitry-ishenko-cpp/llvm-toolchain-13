@@ -1,3 +1,9 @@
+llvm-toolchain-3.2 (1:3.2repack-5) unstable; urgency=low
+
+  * For now, enable only lldb for amd64 and i386 (blocks too many things)
+
+ -- Sylvestre Ledru <sylvestre@debian.org>  Sat, 18 May 2013 10:24:04 +0200
+
 llvm-toolchain-3.2 (1:3.2repack-4) unstable; urgency=low
 
   * Add several patches which, hopefully, will fix the build under ARM, S390,
