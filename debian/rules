@@ -229,7 +229,7 @@ override_dh_auto_test:
 # Managed by debian build system
 	rm -f $(CURDIR)/build-llvm/Release/lib/python*/site-packages/lldb/_lldb.so
 # polly tests
-	$(MAKE) -C $(TARGET_BUILD) polly-test || true
+	$(MAKE) -C $(TARGET_BUILD) check-polly || true
 
 	if test "$(CODECOVERAGE)" = "yes"; then \
 		REPORT=reports/scilab-code-coverage.info; \
