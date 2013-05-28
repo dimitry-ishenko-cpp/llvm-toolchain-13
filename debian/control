@@ -408,7 +408,7 @@ Description: Low-Level Virtual Machine (LLVM), examples
 
 
 Package: lldb-3.2
-Architecture: any
+Architecture: amd64 i386
 Depends: ${shlibs:Depends}, ${misc:Depends}, python
 Pre-Depends: ${misc:Pre-Depends}
 Description: Next generation, high-performance debugger
