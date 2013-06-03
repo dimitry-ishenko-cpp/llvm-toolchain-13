@@ -1,3 +1,10 @@
+llvm-toolchain-3.2 (1:3.2repack-8) UNRELEASED; urgency=low
+
+  * Fix the build under ia64. Thanks to Luca Falavigna for the patch
+    (ia64-fix.diff)
+
+ -- Sylvestre Ledru <sylvestre@debian.org>  Mon, 03 Jun 2013 11:32:29 +0200
+
 llvm-toolchain-3.2 (1:3.2repack-7) unstable; urgency=low
 
   * For now, enable only lldb for amd64 and i386 (blocks too many things)
