@@ -1,10 +1,10 @@
-Index: llvm-toolchain-3.2-3.2repack/lib/ExecutionEngine/JIT/JIT.cpp
+Index: llvm/lib/ExecutionEngine/JIT/JIT.cpp
 ===================================================================
---- llvm-toolchain-3.2-3.2repack.orig/lib/ExecutionEngine/JIT/JIT.cpp   2012-10-08 16:38:25.000000000 +0000
-+++ llvm-toolchain-3.2-3.2repack/lib/ExecutionEngine/JIT/JIT.cpp        2013-06-03 07:27:14.000000000 +0000
+--- llvm.orig/lib/ExecutionEngine/JIT/JIT.cpp	2013-06-03 17:32:40.000000000 +0200
++++ llvm/lib/ExecutionEngine/JIT/JIT.cpp	2013-06-03 17:32:59.000000000 +0200
 @@ -68,7 +68,7 @@
  }
-
+ 
  // Determine whether we can register EH tables.
 -#if (defined(__GNUC__) && !defined(__ARM_EABI__) && \
 +#if (defined(__GNUC__) && !defined(__ARM_EABI__) && !defined(__ia64__) && \
