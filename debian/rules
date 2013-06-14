@@ -35,7 +35,7 @@ ifneq (,$(findstring $(DEB_HOST_ARCH),armel))
   opt_flags += -marm
 endif
 
-LLDB_ARCHS := amd64 i386
+LLDB_ARCHS :=
 LLDB_ENABLE=no
 ifneq (,$(findstring $(DEB_HOST_ARCH),$(LLDB_ARCHS)))
 	LLDB_ENABLE=yes
