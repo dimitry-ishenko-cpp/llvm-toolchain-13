@@ -109,7 +109,7 @@ override_dh_auto_configure: debian/lldb-$(LLVM_VERSION).install debian/lldb-$(LL
 
 
 override_dh_auto_build:
-	$(MAKE) $(NJOBS) -C $(TARGET_BUILD) VERBOSE=1 CLANG_VENDOR=$(VENDOR) CXXFLAGS=-std=c++0x  REQUIRES_RTTI=1
+	$(MAKE) $(NJOBS) -C $(TARGET_BUILD) VERBOSE=1 CLANG_VENDOR=$(VENDOR) CXXFLAGS=-std=c++0x  REQUIRES_RTTI=1 DEBUGMAKE=1
 	cd $(CURDIR)/docs && make -f Makefile.sphinx && make -f Makefile.sphinx man
 #	$(MAKE) $(NJOBS) -C build-compiler-rt VERBOSE=1
 # Only available in clang 3.3
