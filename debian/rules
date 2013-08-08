@@ -190,6 +190,8 @@ build_doc:
 	help2man --version-string=$(LLVM_VERSION) clang/tools/scan-view/scan-view > debian/man/scan-view.1
 	help2man --version-string=$(LLVM_VERSION) clang/tools/clang-format/clang-format-diff.py > debian/man/clang-format-diff-$(LLVM_VERSION).1
 
+	# Specific to cmake
+	mkdir -p build-llvm/Release && cd build-llvm/Release && ln -s ../bin && ln -s ../lib
 
 	for f in clang clang-tblgen clang-check; do \
 		help2man --version-string=$(LLVM_VERSION) build-llvm/Release/bin/$$f > debian/man/$$f.1; \
