@@ -191,7 +191,9 @@ build_doc:
 	help2man --version-string=$(LLVM_VERSION) clang/tools/clang-format/clang-format-diff.py > debian/man/clang-format-diff-$(LLVM_VERSION).1
 
 	# Specific to cmake
-	mkdir -p build-llvm/Release && cd build-llvm/Release && ln -s ../bin && ln -s ../lib
+	if test ! -d build-llvm/Release; then \
+		mkdir -p build-llvm/Release && cd build-llvm/Release && ln -s ../bin && ln -s ../lib; \
+	fi
 
 	for f in clang clang-tblgen clang-check; do \
 		help2man --version-string=$(LLVM_VERSION) build-llvm/Release/bin/$$f > debian/man/$$f.1; \
@@ -279,6 +281,12 @@ override_dh_installdeb:
 
 
 override_dh_auto_test:
+
+	# Specific to cmake
+	if test ! -d build-llvm/Release; then \
+		mkdir -p build-llvm/Release && cd build-llvm/Release && ln -s ../bin && ln -s ../lib; \
+	fi
+
 # LLVM tests
 	$(MAKE) -C $(TARGET_BUILD) check || true
 # clang tests
