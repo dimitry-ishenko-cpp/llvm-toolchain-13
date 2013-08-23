@@ -48,4 +48,3 @@ JITEmitter.patch
 
 ia64-fix.diff
 libprofile_rt_sparc.patch
-use-deb-json.diff
