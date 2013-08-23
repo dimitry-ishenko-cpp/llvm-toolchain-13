@@ -6,6 +6,10 @@ llvm-toolchain-3.2 (1:3.2repack-11) UNRELEASED; urgency=low
     - debian/patches/JITEmitter.patch: Fix a segfault in the exception
       table of the JIT code emitter (See Launchpad bug #1160587)
 
+  [ Luca Falavigna ]
+  * debian/patches/libprofile_rt_sparc.patch:
+    - Re-enable libprofile_rt on Sparc, fix FTBFS.
+
  -- Sylvestre Ledru <sylvestre@debian.org>  Mon, 01 Jul 2013 13:54:13 +0200
 
 llvm-toolchain-3.2 (1:3.2repack-10) unstable; urgency=low

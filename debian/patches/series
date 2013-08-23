@@ -48,3 +48,4 @@ JITEmitter.patch
 
 ia64-fix.diff
 add-ubuntu-saucy.patch
+libprofile_rt_sparc.patch
