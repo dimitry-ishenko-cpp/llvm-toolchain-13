@@ -1,0 +1,17 @@
+Index: llvm-toolchain-snapshot_3.4~svn191634/clang/lib/Driver/ToolChains.cpp
+===================================================================
+--- llvm-toolchain-snapshot_3.4~svn191634.orig/clang/lib/Driver/ToolChains.cpp	2013-09-29 11:38:00.000000000 +0200
++++ llvm-toolchain-snapshot_3.4~svn191634/clang/lib/Driver/ToolChains.cpp	2013-09-29 11:38:00.000000000 +0200
+@@ -2602,6 +2602,12 @@
+   StringRef BiarchSuffix = GCCInstallation.getBiarchSuffix();
+   const GCCVersion &Version = GCCInstallation.getVersion();
+ 
++#ifdef __i386__
++  // clang does not detect this path: /usr/include/i386-linux-gnu/c++/4.8/ Helphim
++// For now, comment this patch to make sure it is fixed upstream
++//  addLibStdCXXIncludePaths( "/usr/include/", "/c++/" + Version.str(), "i386-linux-gnu", GCCInstallation.getMultiarchSuffix(), DriverArgs, CC1Args);
++#endif
++
+   if (addLibStdCXXIncludePaths(
+           LibDir.str() + "/../include", "/c++/" + Version.Text, TripleStr,
+           MultiLibSuffix + BiarchSuffix, DriverArgs, CC1Args))

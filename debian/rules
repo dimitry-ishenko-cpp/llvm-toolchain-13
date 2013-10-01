@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 
 TARGET_BUILD	:= build-llvm
-GCC_VERSION     := 4.7
+GCC_VERSION     := $(shell dpkg-query -W -f '$${Version}' g++ | sed -rne 's,^([0-9]+:)?([0-9]+\.[0-9]+).*$$,\2,p')
 LLVM_VERSION	:= 3.4
 SONAME_EXT      := 1
 DEBIAN_REVISION := $(shell dpkg-parsechangelog | sed -rne 's,^Version: .*-(.*),\1,p')
@@ -18,11 +18,8 @@ DEB_HOST_ARCH       = $(shell dpkg-architecture -qDEB_HOST_ARCH)
 
 OCAML_STDLIB_DIR    ?= $(shell ocamlc -where)
 
-distribution := $(shell lsb_release --id --short)
-distrel := $(shell lsb_release --codename --short)
-ifeq ($(distrel),n/a)
-  distrel := sid
-endif
+export CC=gcc-$(GCC_VERSION)
+export CXX=g++-$(GCC_VERSION)
 
 LDFLAGS_EXTRA=
 CXXFLAGS_EXTRA=
@@ -44,30 +41,17 @@ ifneq (,$(findstring $(DEB_HOST_ARCH),armel))
   opt_flags += -marm
 endif
 
-ifeq ($(distribution),Ubuntu)
-	ifeq ($(distrel),precise)
-		control_vars = '-Vdep:devlibs=libstdc++6-4.6-dev'
-	endif
-	ifeq ($(distrel),quantal)
-		control_vars = '-Vdep:devlibs=libstdc++6-4.7-dev'
-	endif
-	ifeq ($(distrel),raring)
-		control_vars = '-Vdep:devlibs=libstdc++6-4.7-dev, libgcc-4.7-dev, libobjc-4.7-dev'
-	endif
-
+ifeq ($(shell dpkg --compare-versions $(shell dpkg-query -W -f '$${Version}' g++-$(GCC_VERSION)) ge 4.8-20121128-1~ ; echo $$?),0)
+	control_vars = '-Vdep:devlibs=libstdc++-$(GCC_VERSION)-dev, libgcc-$(GCC_VERSION)-dev, libobjc-$(GCC_VERSION)-dev'
+else ifeq ($(shell dpkg --compare-versions $(shell dpkg-query -W -f '$${Version}' g++-$(GCC_VERSION)) ge 4.7.2-10~ ; echo $$?),0)
+	control_vars = '-Vdep:devlibs=libstdc++6-$(GCC_VERSION)-dev, libgcc-$(GCC_VERSION)-dev, libobjc-$(GCC_VERSION)-dev'
 else
-    ifeq ($(distrel),wheezy)
-        control_vars = '-Vdep:devlibs=libstdc++6-4.7-dev'
-	else
-		# Debian experimental
-		control_vars = '-Vdep:devlibs=libstdc++6-4.7-dev, libgcc-4.7-dev, libobjc-4.7-dev'
-	endif
+	control_vars = '-Vdep:devlibs=libstdc++6-$(GCC_VERSION)-dev'
 endif
 
 BINUTILS_GOLD_ARCHS := amd64 armhf i386 powerpc powerpcspe ppc64 sparc sparc64 x32
-BINUTILS_GOLD_UNSUPPORTED_DISTRO = wheezy quantal
+ifeq ($(shell dpkg --compare-versions $(shell dpkg-query -W -f '$${Version}' binutils) ge 2.23.1-1~exp3 ; echo $$?),0)
 ifneq (,$(findstring $(DEB_HOST_ARCH),$(BINUTILS_GOLD_ARCHS)))
-ifeq (,$(findstring $(distrel),$(BINUTILS_GOLD_UNSUPPORTED_DISTRO)))
 # -fused-ld=gold enables the gold linker (but is not supported by all archs / distro)
 	LDFLAGS_EXTRA += -fuse-ld=gold
 endif
@@ -88,8 +72,27 @@ ifneq (,$(filter scan-build,$(DEB_BUILD_OPTIONS)))
 # OTHERMIRROR="deb http://llvm.org/apt/unstable/ llvm-toolchain main"
 # EXTRAPACKAGES="clang-3.4"
 	PRE_PROCESS=scan-build
+	PRE_PROCESS_CONF=scan-build
 # no need to run tests in this case
 	DEB_BUILD_OPTIONS+=" nocheck"
+endif
+
+
+ifneq (,$(filter coverity,$(DEB_BUILD_OPTIONS)))
+# enable the build using coverity
+# pbuilder contains BINDMOUNTS="/opt/cov-analysis/"
+# And we have some pbuilder hooks to configure and pack the result
+# Where the binaries are installed on the jenkins instance
+	PRE_PROCESS=PATH=$$PATH:/opt/cov-analysis/bin/ cov-build --dir cov-int
+
+# We don't want to check the temporary files produced by the configure
+	PRE_PROCESS_CONF=
+
+	COVERITY_ENABLE=1
+# no need to run tests in this case
+	DEB_BUILD_OPTIONS+=" nocheck"
+else
+	COVERITY_ENABLE=0
 endif
 
 %:
@@ -99,6 +102,8 @@ debian/%: debian/%.in
 	sed -e 's|@DEB_HOST_MULTIARCH@|$(DEB_HOST_MULTIARCH)|g' -e "s|@OCAML_STDLIB_DIR@|$(OCAML_STDLIB_DIR)|g" -e "s|@LLVM_VERSION@|$(LLVM_VERSION)|g" $< > $@
 
 override_dh_auto_configure: debian/lldb-$(LLVM_VERSION).install debian/lldb-$(LLVM_VERSION).links debian/libllvm$(LLVM_VERSION).install debian/llvm-$(LLVM_VERSION)-dev.links debian/libllvm-$(LLVM_VERSION)-ocaml-dev.install debian/libllvm-$(LLVM_VERSION)-ocaml-dev.dirs debian/llvm-$(LLVM_VERSION)-runtime.binfmt debian/llvm-$(LLVM_VERSION)-runtime.prerm debian/pollycc
+	echo "Using gcc: "
+	$(CC) -v
 	mkdir -p $(TARGET_BUILD)
 	mkdir -p clang/include/clang/Debian
 	sed -e "s|@DEB_HOST_MULTIARCH@|$(DEB_HOST_MULTIARCH)|" \
@@ -131,27 +136,34 @@ override_dh_auto_configure: debian/lldb-$(LLVM_VERSION).install debian/lldb-$(LL
 	ln -s ../compiler-rt .; \
 	readlink compiler-rt
 
+	# Configure coverity (we need the compilers)
+	-(if test $(COVERITY_ENABLE) -eq 1; then \
+		export PATH=$$PATH:/opt/cov-analysis/bin/; \
+		cov-configure --compiler clang --comptype gcc; \
+		cov-configure --compiler gcc-4.8 --comptype gcc; \
+		cov-configure --compiler g++-4.8 --comptype gcc; \
+	fi)
+
 	# Due to bug upstream, no symlink here
 	cp -R -H clang-tools-extra tools/clang/tools/extra
-
 # Start the actual configure
-	# cd $(TARGET_BUILD) && $(PRE_PROCESS) \
-	#   ../configure $(confargs) \
-	# --prefix=/usr/lib/llvm-$(LLVM_VERSION) \
-	# --bindir=\$${prefix}/bin/ \
-	# --disable-assertions \
-	# --enable-shared \
-	# --enable-optimized \
-	# --with-optimize-option=' $(opt_flags)' \
-	# --enable-pic \
-	# --enable-libffi \
-	# --with-ocaml-libdir=/usr/lib/ocaml/llvm-$(LLVM_VERSION) \
-	# --libdir=\$${prefix}/lib/$(DEB_HOST_MULTIARCH) \
-	# --with-binutils-include=/usr/include \
-	# --with-cloog --with-isl \
-	# --with-bug-report-url=http://bugs.debian.org/ \
-	# --enable-shared  --enable-experimental-targets=R600 \
-	# CLANG_VENDOR=$(VENDOR) || { cat config.log tools/polly/config.log; exit 1; }
+	cd $(TARGET_BUILD) && $(PRE_PROCESS_CONF) \
+	  ../configure $(confargs) \
+	--prefix=/usr/lib/llvm-$(LLVM_VERSION) \
+	--bindir=\$${prefix}/bin/ \
+	--disable-assertions \
+	--enable-shared \
+	--enable-optimized \
+	--with-optimize-option=' $(opt_flags)' \
+	--enable-pic \
+	--enable-libffi \
+	--with-ocaml-libdir=/usr/lib/ocaml/llvm-$(LLVM_VERSION) \
+	--libdir=\$${prefix}/lib/$(DEB_HOST_MULTIARCH) \
+	--with-binutils-include=/usr/include \
+	--with-cloog --with-isl \
+	--with-bug-report-url=http://bugs.debian.org/ \
+	--enable-shared  --enable-experimental-targets=R600 \
+	CLANG_VENDOR=$(VENDOR) || { cat config.log tools/polly/config.log; exit 1; }
 #	cd $(TARGET_BUILD) && cmake ../ -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_VERBOSE_MAKEFILE=ON
 #	mkdir build-compiler-rt && cd build-compiler-rt && cmake ../compiler-rt
 	cd $(TARGET_BUILD) && cmake ../ \
@@ -165,7 +177,7 @@ override_dh_auto_configure: debian/lldb-$(LLVM_VERSION).install debian/lldb-$(LL
 #	mkdir build-compiler-rt && cd build-compiler-rt && cmake ../compiler-rt
 
 override_dh_auto_build:
-	$(PRE_PROCESS) $(MAKE) $(NJOBS) -C $(TARGET_BUILD) VERBOSE=1 CLANG_VENDOR=$(VENDOR) CXXFLAGS="$(CXXFLAGS_EXTRA) -std=c++0x"  LDFLAGS="$(LDFLAGS_EXTRA)" REQUIRES_RTTI=1
+	$(PRE_PROCESS) $(MAKE) $(NJOBS) -C $(TARGET_BUILD) VERBOSE=1 CLANG_VENDOR=$(VENDOR) CXXFLAGS="$(CXXFLAGS_EXTRA) -std=c++0x"  LDFLAGS="$(LDFLAGS_EXTRA)" REQUIRES_RTTI=1 DEBUGMAKE=1
 
 override_dh_prep: build_doc
 	dh_prep
@@ -190,16 +202,11 @@ build_doc:
 	help2man --version-string=$(LLVM_VERSION) clang/tools/scan-view/scan-view > debian/man/scan-view.1
 	help2man --version-string=$(LLVM_VERSION) clang/tools/clang-format/clang-format-diff.py > debian/man/clang-format-diff-$(LLVM_VERSION).1
 
-	# Specific to cmake
-	if test ! -d build-llvm/Release; then \
-		mkdir -p build-llvm/Release && cd build-llvm/Release && ln -s ../bin && ln -s ../lib; \
-	fi
-
 	for f in clang clang-tblgen clang-check; do \
 		help2man --version-string=$(LLVM_VERSION) $(TARGET_BUILD)/Release/bin/$$f > debian/man/$$f.1; \
 	done
 
-	for f in llvm-dwarfdump llvm-mc llvm-mcmarkup llvm-objdump llvm-rtdyld llvm-size llvm-tblgen macho-dump lldb clang-format cpp11-migrate; do \
+	for f in llvm-dwarfdump llvm-mc llvm-mcmarkup llvm-objdump llvm-rtdyld llvm-size llvm-tblgen macho-dump lldb clang-format clang-modernize; do \
 		help2man --version-string=$(LLVM_VERSION) $(TARGET_BUILD)/Release/bin/$$f > debian/man/$$f-$(LLVM_VERSION).1; \
     done
 
@@ -319,6 +326,8 @@ override_dh_gencontrol:
 
 override_dh_auto_clean:
 	rm -rf $(TARGET_BUILD) tools/clang/include/clang/Debian/debian_path.h docs/_build/ tools/clang/docs/_html/
+# QA tools
+	rm -rf cov-int/ reports/
 	rm -f `ls debian/*.in|sed -e "s|.in$$||g"`
 	find utils -name '*.pyc' | xargs -r rm -f
 	find test -name '*.pyc' -o -name '*.cm[ix]' | xargs -r rm -f
