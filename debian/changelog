@@ -1,4 +1,4 @@
-llvm-toolchain-snapshot (1:4.0~svn291344-1) unstable; urgency=medium
+llvm-toolchain-snapshot (1:4.0~svn291432-1) unstable; urgency=medium
 
   * New snapshot release
   * Disable libedit usage in lldb because of garbage (Closes: #846616, #850111)
