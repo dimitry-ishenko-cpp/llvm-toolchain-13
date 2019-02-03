@@ -1,0 +1,12 @@
+Index: llvm-toolchain-7-7.0.1/compiler-rt/lib/fuzzer/FuzzerDefs.h
+===================================================================
+--- llvm-toolchain-7-7.0.1.orig/compiler-rt/lib/fuzzer/FuzzerDefs.h
++++ llvm-toolchain-7-7.0.1/compiler-rt/lib/fuzzer/FuzzerDefs.h
+@@ -28,6 +28,7 @@
+ #define LIBFUZZER_LINUX 1
+ #define LIBFUZZER_NETBSD 0
+ #define LIBFUZZER_FREEBSD 0
++#define LIBFUZZER_KFREEBSD 0
+ #define LIBFUZZER_OPENBSD 0
+ #define LIBFUZZER_WINDOWS 0
+ #elif __APPLE__
