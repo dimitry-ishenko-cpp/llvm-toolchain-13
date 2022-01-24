@@ -977,10 +977,6 @@ override_dh_auto_test:
 	@echo "Skipping tests"
 endif
 
-
-override_dh_testroot:
-	# Override for Debian stretch
-
 override_dh_gencontrol:
 	dh_gencontrol -- $(control_vars)
 
