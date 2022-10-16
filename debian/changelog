@@ -1,3 +1,9 @@
+llvm-toolchain-13 (2:13.0.1-7) unstable; urgency=medium
+
+  * Switch to epoch 2:
+
+ -- Dimitry Ishenko <dimitry.ishenko@gmail.com>  Sun, 16 Oct 2022 13:48:16 -0400
+
 llvm-toolchain-13 (1:13.0.1-7) unstable; urgency=medium
 
   [ Michael Biebl ]

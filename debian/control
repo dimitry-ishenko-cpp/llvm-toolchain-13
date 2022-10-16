@@ -47,8 +47,8 @@ Provides: c-compiler, objc-compiler, c++-compiler
 Recommends: llvm-13-dev, python3
 # libomp-13-dev
 Suggests: clang-13-doc
-Breaks: llvm-13-dev (<< 1:13~++20210129063721)
-Replaces: llvm-13-dev (<< 1:13~++20210129063721)
+Breaks: llvm-13-dev (<< 2:13~++20210129063721)
+Replaces: llvm-13-dev (<< 2:13~++20210129063721)
 Description: C, C++ and Objective-C compiler
  Clang project is a C, C++, Objective C and Objective C++ front-end
  based on the LLVM compiler. Its goal is to offer a replacement to the
@@ -153,8 +153,8 @@ Section: libdevel
 Depends: ${shlibs:Depends}, ${misc:Depends}, ${dep:devlibs},
  ${dep:devlibs-objc}, libclang1-13 (= ${binary:Version}),
  libclang-common-13-dev (= ${binary:Version})
-Breaks: llvm-13-dev (<< 1:13.0.1-4ubuntu1)
-Replaces: llvm-13-dev (<< 1:13.0.1-4ubuntu1)
+Breaks: llvm-13-dev (<< 2:13.0.1-4ubuntu1)
+Replaces: llvm-13-dev (<< 2:13.0.1-4ubuntu1)
 Description: Clang library - Development package
  Clang project is a C, C++, Objective C and Objective C++ front-end
  based on the LLVM compiler. Its goal is to offer a replacement to the
@@ -298,8 +298,8 @@ Description: Modular compiler and toolchain technologies, runtime library
 Package: llvm-13-linker-tools
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Breaks: llvm-13-dev (<< 1:13~++20210129063721), clang-13 (<< 1:13~++20210129063721)
-Replaces: llvm-13-dev (<< 1:13~++20210129063721), clang-13 (<< 1:13~++20210129063721)
+Breaks: llvm-13-dev (<< 2:13~++20210129063721), clang-13 (<< 2:13~++20210129063721)
+Replaces: llvm-13-dev (<< 2:13~++20210129063721), clang-13 (<< 2:13~++20210129063721)
 Description: Modular compiler and toolchain technologies - Plugins
  LLVM is a collection of libraries and tools that make it easy to build
  compilers, optimizers, just-in-time code generators, and many other
@@ -567,10 +567,10 @@ Section: libdevel
 Architecture: amd64 arm64 armhf i386 mips64el ppc64el ppc64 riscv64
 Depends: libomp5-13 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
 Suggests: libomp-13-doc
-Breaks: libiomp-dev (<< 3.7-1), libomp-dev (<< 44), llvm-13 (<< 1:13.0.0-4)
+Breaks: libiomp-dev (<< 3.7-1), libomp-dev (<< 44), llvm-13 (<< 2:13.0.0-4)
 Provides: libomp-x.y-dev
 Conflicts: libomp-x.y-dev
-Replaces: libomp-x.y-dev, llvm-13 (<< 1:13.0.0-4)
+Replaces: libomp-x.y-dev, llvm-13 (<< 2:13.0.0-4)
 Description: LLVM OpenMP runtime - dev package
  The runtime is the part of the OpenMP implementation that your code is
  linked against, and that manages the multiple threads in an OpenMP program
