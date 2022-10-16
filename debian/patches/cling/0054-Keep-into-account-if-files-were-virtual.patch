@@ -1,0 +1,190 @@
+From 4e74e21d1cfc7cb10568fe41502dc7bd050ba003 Mon Sep 17 00:00:00 2001
+From: Vassil Vassilev <v.g.vassilev@gmail.com>
+Date: Wed, 17 May 2017 15:22:25 +0200
+Subject: [PATCH 54/57] Keep into account if files were virtual.
+
+In some cases we do not have files on disk. They are only available in the
+FileManager as virtual files and the SourceManager overrides their content.
+---
+ clang/include/clang/Basic/SourceManager.h      |  4 ++--
+ clang/lib/AST/ASTImporter.cpp                  |  2 +-
+ clang/lib/Basic/SourceManager.cpp              | 18 ++++++++++--------
+ .../lib/Frontend/VerifyDiagnosticConsumer.cpp  |  5 +++++
+ clang/lib/Lex/HeaderSearch.cpp                 |  2 +-
+ clang/lib/Serialization/ASTWriter.cpp          |  4 ++--
+ 6 files changed, 21 insertions(+), 14 deletions(-)
+
+diff --git a/clang/include/clang/Basic/SourceManager.h b/clang/include/clang/Basic/SourceManager.h
+index 8192cbc875ce..2e7be16b805e 100644
+--- a/clang/include/clang/Basic/SourceManager.h
++++ b/clang/include/clang/Basic/SourceManager.h
+@@ -205,7 +205,7 @@ public:
+   /// \param Loc If specified, is the location that invalid file diagnostics
+   ///   will be emitted at.
+   llvm::Optional<llvm::MemoryBufferRef>
+-  getBufferOrNone(DiagnosticsEngine &Diag, FileManager &FM,
++  getBufferOrNone(DiagnosticsEngine &Diag, const SourceManager &FM,
+                   SourceLocation Loc = SourceLocation()) const;
+ 
+   /// Returns the size of the content encapsulated by this
+@@ -1013,7 +1013,7 @@ public:
+   getBufferOrNone(FileID FID, SourceLocation Loc = SourceLocation()) const {
+     if (auto *Entry = getSLocEntryForFile(FID))
+       return Entry->getFile().getContentCache().getBufferOrNone(
+-          Diag, getFileManager(), Loc);
++          Diag, *this, Loc);
+     return None;
+   }
+ 
+diff --git a/clang/lib/AST/ASTImporter.cpp b/clang/lib/AST/ASTImporter.cpp
+index 787e02029dae..d57e2623f319 100644
+--- a/clang/lib/AST/ASTImporter.cpp
++++ b/clang/lib/AST/ASTImporter.cpp
+@@ -9029,7 +9029,7 @@ Expected<FileID> ASTImporter::Import(FileID FromID, bool IsBuiltin) {
+       // FIXME: We want to re-use the existing MemoryBuffer!
+       llvm::Optional<llvm::MemoryBufferRef> FromBuf =
+           Cache->getBufferOrNone(FromContext.getDiagnostics(),
+-                                 FromSM.getFileManager(), SourceLocation{});
++                                 FromSM, SourceLocation{});
+       if (!FromBuf)
+         return llvm::make_error<ImportError>(ImportError::Unknown);
+ 
+diff --git a/clang/lib/Basic/SourceManager.cpp b/clang/lib/Basic/SourceManager.cpp
+index 78128fee88f4..cbbc4a1eee34 100644
+--- a/clang/lib/Basic/SourceManager.cpp
++++ b/clang/lib/Basic/SourceManager.cpp
+@@ -101,7 +101,7 @@ const char *ContentCache::getInvalidBOM(StringRef BufStr) {
+ }
+ 
+ llvm::Optional<llvm::MemoryBufferRef>
+-ContentCache::getBufferOrNone(DiagnosticsEngine &Diag, FileManager &FM,
++ContentCache::getBufferOrNone(DiagnosticsEngine &Diag, const SourceManager &SM,
+                               SourceLocation Loc) const {
+   // Lazily create the Buffer for ContentCaches that wrap files.  If we already
+   // computed it, just return what we have.
+@@ -116,6 +116,8 @@ ContentCache::getBufferOrNone(DiagnosticsEngine &Diag, FileManager &FM,
+   // return paths.
+   IsBufferInvalid = true;
+ 
++  FileManager &FM = SM.getFileManager();
++
+   auto BufferOrError = FM.getBufferForFile(ContentsEntry, IsFileVolatile);
+ 
+   // If we were unable to open the file, then we are in an inconsistent
+@@ -568,7 +570,7 @@ FileID SourceManager::createFileID(FileEntryRef SourceFile,
+   // If this is a named pipe, immediately load the buffer to ensure subsequent
+   // calls to ContentCache::getSize() are accurate.
+   if (IR.ContentsEntry->isNamedPipe())
+-    (void)IR.getBufferOrNone(Diag, getFileManager(), SourceLocation());
++    (void)IR.getBufferOrNone(Diag, *this, SourceLocation());
+ 
+   return createFileIDImpl(IR, SourceFile.getName(), IncludePos, FileCharacter,
+                           LoadedID, LoadedOffset);
+@@ -702,7 +704,7 @@ SourceManager::createExpansionLocImpl(const ExpansionInfo &Info,
+ llvm::Optional<llvm::MemoryBufferRef>
+ SourceManager::getMemoryBufferForFileOrNone(const FileEntry *File) {
+   SrcMgr::ContentCache &IR = getOrCreateContentCache(File->getLastRef());
+-  return IR.getBufferOrNone(Diag, getFileManager(), SourceLocation());
++  return IR.getBufferOrNone(Diag, *this, SourceLocation());
+ }
+ 
+ void SourceManager::overrideFileContents(
+@@ -768,7 +770,7 @@ SourceManager::getBufferDataIfLoaded(FileID FID) const {
+ llvm::Optional<StringRef> SourceManager::getBufferDataOrNone(FileID FID) const {
+   if (const SrcMgr::SLocEntry *Entry = getSLocEntryForFile(FID))
+     if (auto B = Entry->getFile().getContentCache().getBufferOrNone(
+-            Diag, getFileManager(), SourceLocation()))
++            Diag, *this, SourceLocation()))
+       return B->getBuffer();
+   return None;
+ }
+@@ -1189,7 +1191,7 @@ const char *SourceManager::getCharacterData(SourceLocation SL,
+     return "<<<<INVALID BUFFER>>>>";
+   }
+   llvm::Optional<llvm::MemoryBufferRef> Buffer =
+-      Entry.getFile().getContentCache().getBufferOrNone(Diag, getFileManager(),
++      Entry.getFile().getContentCache().getBufferOrNone(Diag, *this,
+                                                         SourceLocation());
+   if (Invalid)
+     *Invalid = !Buffer;
+@@ -1390,7 +1392,7 @@ unsigned SourceManager::getLineNumber(FileID FID, unsigned FilePos,
+   /// SourceLineCache for it on demand.
+   if (!Content->SourceLineCache) {
+     llvm::Optional<llvm::MemoryBufferRef> Buffer =
+-        Content->getBufferOrNone(Diag, getFileManager(), SourceLocation());
++        Content->getBufferOrNone(Diag, *this, SourceLocation());
+     if (Invalid)
+       *Invalid = !Buffer;
+     if (!Buffer)
+@@ -1556,7 +1558,7 @@ PresumedLoc SourceManager::getPresumedLoc(SourceLocation Loc,
+   StringRef Filename;
+   if (C->OrigEntry)
+     Filename = C->OrigEntry->getName();
+-  else if (auto Buffer = C->getBufferOrNone(Diag, getFileManager()))
++  else if (auto Buffer = C->getBufferOrNone(Diag, *this))
+     Filename = Buffer->getBufferIdentifier();
+ 
+   unsigned LineNo = getLineNumber(LocInfo.first, LocInfo.second, &Invalid);
+@@ -1740,7 +1742,7 @@ SourceLocation SourceManager::translateLineCol(FileID FID,
+   // If this is the first use of line information for this buffer, compute the
+   // SourceLineCache for it on demand.
+   llvm::Optional<llvm::MemoryBufferRef> Buffer =
+-      Content->getBufferOrNone(Diag, getFileManager());
++      Content->getBufferOrNone(Diag, *this);
+   if (!Buffer)
+     return SourceLocation();
+   if (!Content->SourceLineCache)
+diff --git a/clang/lib/Frontend/VerifyDiagnosticConsumer.cpp b/clang/lib/Frontend/VerifyDiagnosticConsumer.cpp
+index 0503ae46a15f..c59da6db2054 100644
+--- a/clang/lib/Frontend/VerifyDiagnosticConsumer.cpp
++++ b/clang/lib/Frontend/VerifyDiagnosticConsumer.cpp
+@@ -547,6 +547,11 @@ static bool ParseDirective(StringRef S, ExpectedData *ED, SourceManager &SM,
+           Optional<FileEntryRef> File =
+               PP->LookupFile(Pos, Filename, false, nullptr, nullptr, CurDir,
+                              nullptr, nullptr, nullptr, nullptr, nullptr);
++
++          // Check if the file was virtual
++          if (!File)
++            File = SM.getFileManager().getOptionalFileRef(Filename);
++
+           if (!File) {
+             Diags.Report(Pos.getLocWithOffset(PH.C - PH.Begin),
+                          diag::err_verify_missing_file)
+diff --git a/clang/lib/Lex/HeaderSearch.cpp b/clang/lib/Lex/HeaderSearch.cpp
+index fb93b7068f58..de1b1a03adde 100644
+--- a/clang/lib/Lex/HeaderSearch.cpp
++++ b/clang/lib/Lex/HeaderSearch.cpp
+@@ -349,7 +349,7 @@ Optional<FileEntryRef> HeaderSearch::getFileAndSuggestModule(
+     bool OpenFile /*= true*/, bool CacheFailures /*= true*/) {
+   // If we have a module map that might map this header, load it and
+   // check whether we'll have a suggestion for a module.
+-  auto File = getFileMgr().getFile(FileName, OpenFile, CacheFailures);
++  auto File = getFileMgr().getFileRef(FileName, OpenFile, CacheFailures);
+   if (!File) {
+     // For rare, surprising errors (e.g. "out of file handles"), diag the EC
+     // message.
+diff --git a/clang/lib/Serialization/ASTWriter.cpp b/clang/lib/Serialization/ASTWriter.cpp
+index 66c207ad9243..5bbda80eea57 100644
+--- a/clang/lib/Serialization/ASTWriter.cpp
++++ b/clang/lib/Serialization/ASTWriter.cpp
+@@ -2008,7 +2008,7 @@ void ASTWriter::WriteSourceManagerBlock(SourceManager &SourceMgr,
+         // that is required by llvm::MemoryBuffer::getMemBuffer (on
+         // the reader side).
+         llvm::Optional<llvm::MemoryBufferRef> Buffer =
+-            Content->getBufferOrNone(PP.getDiagnostics(), PP.getFileManager());
++            Content->getBufferOrNone(PP.getDiagnostics(), PP.getSourceManager());
+         StringRef Name = Buffer ? Buffer->getBufferIdentifier() : "";
+         Stream.EmitRecordWithBlob(SLocBufferAbbrv, Record,
+                                   StringRef(Name.data(), Name.size() + 1));
+@@ -2022,7 +2022,7 @@ void ASTWriter::WriteSourceManagerBlock(SourceManager &SourceMgr,
+         // Include the implicit terminating null character in the on-disk buffer
+         // if we're writing it uncompressed.
+         llvm::Optional<llvm::MemoryBufferRef> Buffer =
+-            Content->getBufferOrNone(PP.getDiagnostics(), PP.getFileManager());
++            Content->getBufferOrNone(PP.getDiagnostics(), PP.getSourceManager());
+         if (!Buffer)
+           Buffer = llvm::MemoryBufferRef("<<<INVALID BUFFER>>>", "");
+         StringRef Blob(Buffer->getBufferStart(), Buffer->getBufferSize() + 1);
+-- 
+2.34.1
+

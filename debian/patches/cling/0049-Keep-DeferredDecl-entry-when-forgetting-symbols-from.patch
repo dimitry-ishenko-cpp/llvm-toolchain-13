@@ -1,0 +1,58 @@
+From 3bfd762485998fcab292a7fbbf1d4ec1c6cf9018 Mon Sep 17 00:00:00 2001
+From: Axel Naumann <Axel.Naumann@cern.ch>
+Date: Fri, 31 Mar 2017 10:01:50 +0200
+Subject: [PATCH 49/57] Keep DeferredDecl entry when forgetting symbols; from
+ Roman Zulak and me.
+
+Now that DeferredDecls keep track of already emitted (and possibly to be
+re-emitted) Decls, removing a symbol *must* keep the Decl in DeferredDecls
+to enable re-emission in a subsequent Transaction. *Only* actually unloading
+the Decl itself must remove it from the DeferredDecls.
+---
+ clang/lib/CodeGen/ModuleBuilder.cpp | 26 +-------------------------
+ 1 file changed, 1 insertion(+), 25 deletions(-)
+
+diff --git a/clang/lib/CodeGen/ModuleBuilder.cpp b/clang/lib/CodeGen/ModuleBuilder.cpp
+index d94f161abe23..084823a28ef4 100644
+--- a/clang/lib/CodeGen/ModuleBuilder.cpp
++++ b/clang/lib/CodeGen/ModuleBuilder.cpp
+@@ -298,35 +298,11 @@ namespace clang {
+           break;
+         }
+       }
+-
+-      if (GV->isWeakForLinker() && GV->isDeclaration()) {
+-        // might be an entry in the deferred decls, if so: remove!
+-        auto IDeferredDecl = Builder->DeferredDecls.find(GV->getName());
+-        if (IDeferredDecl != Builder->DeferredDecls.end()) {
+-          // yes, pointer comparison.
+-          if (IDeferredDecl->first.data() == GV->getName().data())
+-            Builder->DeferredDecls.erase(IDeferredDecl);
+-        }
+-      }
+     }
+ 
+     void forgetDecl(const GlobalDecl& GD) {
+-      if (const auto VD = dyn_cast<VarDecl>(GD.getDecl())) {
+-        if (!VD->isWeak() || !VD->isThisDeclarationADefinition())
+-          return;
+-      } else if (const auto FD = dyn_cast<FunctionDecl>(GD.getDecl())) {
+-        if (!FD->isWeak() || !FD->isThisDeclarationADefinition())
+-          return;
+-      } else {
+-        return;
+-      }
+-      // It's a weak, defined var or function decl.
+       StringRef MangledName = Builder->getMangledName(GD);
+-      auto IDeferredDecl = Builder->DeferredDecls.find(MangledName);
+-      if (IDeferredDecl != Builder->DeferredDecls.end()) {
+-        if (IDeferredDecl->second == GD)
+-          Builder->DeferredDecls.erase(IDeferredDecl);
+-      }
++      Builder->DeferredDecls.erase(MangledName);
+     }
+ 
+     void Initialize(ASTContext &Context) override {
+-- 
+2.34.1
+

@@ -1,0 +1,40 @@
+From cc287289fa8b5cc3d2ee169fbf188a8e2479712f Mon Sep 17 00:00:00 2001
+From: Axel Naumann <Axel.Naumann@cern.ch>
+Date: Tue, 13 Jan 2015 14:52:16 +0100
+Subject: [PATCH 29/57] CGModule can have pending WeakRefReferences; carry
+ over.
+
+---
+ clang/lib/CodeGen/ModuleBuilder.cpp | 10 +++-------
+ 1 file changed, 3 insertions(+), 7 deletions(-)
+
+diff --git a/clang/lib/CodeGen/ModuleBuilder.cpp b/clang/lib/CodeGen/ModuleBuilder.cpp
+index ba00d11eebb5..be80af83c960 100644
+--- a/clang/lib/CodeGen/ModuleBuilder.cpp
++++ b/clang/lib/CodeGen/ModuleBuilder.cpp
+@@ -146,19 +146,15 @@ namespace {
+              && "Newly created module should not have deferred vtables");
+       Builder->DeferredVTables.swap(OldBuilder->DeferredVTables);
+ 
+-      assert(Builder->MangledDeclNames.empty()
+-             && "Newly created module should not have mangled decl names");
+-      //Builder->MangledDeclNames.swap(OldBuilder->MangledDeclNames);
+-
+       assert(Builder->Manglings.empty()
+              && "Newly created module should not have manglings");
+       // Calls swap() internally, *also* swapping the Allocator object which is
+       // essential to keep the storage!
+       Builder->Manglings = std::move(OldBuilder->Manglings);
+ 
+-
+-      assert(OldBuilder->WeakRefReferences.empty()
+-             && "Not all WeakRefRefs have been applied");
++      assert(Builder->WeakRefReferences.empty()
++             && "Newly created module should not have weakRefRefs");
++      Builder->WeakRefReferences.swap(OldBuilder->WeakRefReferences);
+ 
+ 
+       return M.get();
+-- 
+2.34.1
+

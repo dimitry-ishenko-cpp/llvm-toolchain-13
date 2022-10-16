@@ -1,0 +1,30 @@
+From 7b0816c35638d74a37cae10ebba477f53703c6ff Mon Sep 17 00:00:00 2001
+From: Philippe Canal <pcanal@fnal.gov>
+Date: Sun, 13 Nov 2016 15:17:36 -0600
+Subject: [PATCH 42/57] Fix assertion when removing decls coming from a pch/pcm
+
+When the decls come from a pch/pcm, they are added to the lookup table
+only at the time of the first search.
+
+This resulted in the assertion triggering when using an overzealous version
+of AutoloadingVisitor in the test roottest/root/io/newClassDef/noclassdef.
+---
+ clang/lib/AST/DeclBase.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/clang/lib/AST/DeclBase.cpp b/clang/lib/AST/DeclBase.cpp
+index 3467da2b549e..8b5f02d67f20 100644
+--- a/clang/lib/AST/DeclBase.cpp
++++ b/clang/lib/AST/DeclBase.cpp
+@@ -1514,7 +1514,7 @@ void DeclContext::removeDecl(Decl *D) {
+       StoredDeclsMap *Map = DC->getPrimaryContext()->LookupPtr;
+       if (Map) {
+         StoredDeclsMap::iterator Pos = Map->find(ND->getDeclName());
+-        assert(Pos != Map->end() && "no lookup entry for decl");
++        assert((DC->hasExternalVisibleStorage() || Pos != Map->end()) && "no lookup entry for decl");
+         Pos->second.remove(ND);
+       }
+     } while (DC->isTransparentContext() && (DC = DC->getParent()));
+-- 
+2.34.1
+

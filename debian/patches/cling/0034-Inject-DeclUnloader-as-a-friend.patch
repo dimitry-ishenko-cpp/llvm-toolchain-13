@@ -1,0 +1,24 @@
+From d08c328c5a1c135fd2394f6029335a41e4f06e45 Mon Sep 17 00:00:00 2001
+From: Philippe Canal <pcanal@fnal.gov>
+Date: Sat, 17 Oct 2015 01:05:32 -0500
+Subject: [PATCH 34/57] Inject DeclUnloader as a friend.
+
+---
+ clang/include/clang/AST/DeclCXX.h | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/clang/include/clang/AST/DeclCXX.h b/clang/include/clang/AST/DeclCXX.h
+index 0d5ad40fc19e..b358a470fa74 100644
+--- a/clang/include/clang/AST/DeclCXX.h
++++ b/clang/include/clang/AST/DeclCXX.h
+@@ -261,6 +261,7 @@ class CXXRecordDecl : public RecordDecl {
+   friend class ASTWriter;
+   friend class DeclContext;
+   friend class LambdaExpr;
++  friend class DeclUnloader;
+ 
+   friend void FunctionDecl::setPure(bool);
+   friend void TagDecl::startDefinition();
+-- 
+2.34.1
+

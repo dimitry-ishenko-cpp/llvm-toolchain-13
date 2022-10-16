@@ -1,0 +1,24 @@
+From 8e4982c04b39dc7cbdd61f498526d5089b8ad9b5 Mon Sep 17 00:00:00 2001
+From: Axel Naumann <Axel.Naumann@cern.ch>
+Date: Fri, 31 Mar 2017 20:54:44 +0200
+Subject: [PATCH 52/57] Clear also EmittedDeferredDecls.
+
+---
+ clang/lib/CodeGen/CodeGenModule.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/clang/lib/CodeGen/CodeGenModule.cpp b/clang/lib/CodeGen/CodeGenModule.cpp
+index 1d018b3af3df..be9bfb422ca4 100644
+--- a/clang/lib/CodeGen/CodeGenModule.cpp
++++ b/clang/lib/CodeGen/CodeGenModule.cpp
+@@ -410,6 +410,7 @@ void CodeGenModule::checkAliases() {
+ 
+ void CodeGenModule::clear() {
+   DeferredDeclsToEmit.clear();
++  EmittedDeferredDecls.clear();
+   if (OpenMPRuntime)
+     OpenMPRuntime->clear();
+ }
+-- 
+2.34.1
+

@@ -1,0 +1,31 @@
+From 62ad471c9910b1c920251fe1ace85a1f94fc2514 Mon Sep 17 00:00:00 2001
+From: Axel Naumann <Axel.Naumann@cern.ch>
+Date: Fri, 27 Feb 2015 10:57:02 +0100
+Subject: [PATCH 30/57] Survive #pragma once from virtual file.
+
+---
+ clang/lib/Lex/Pragma.cpp | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/clang/lib/Lex/Pragma.cpp b/clang/lib/Lex/Pragma.cpp
+index 27765af34fed..83b733c87dd7 100644
+--- a/clang/lib/Lex/Pragma.cpp
++++ b/clang/lib/Lex/Pragma.cpp
+@@ -409,9 +409,11 @@ void Preprocessor::HandlePragmaOnce(Token &OnceTok) {
+     return;
+   }
+ 
+-  // Get the current file lexer we're looking at.  Ignore _Pragma 'files' etc.
+-  // Mark the file as a once-only file now.
+-  HeaderInfo.MarkFileIncludeOnce(getCurrentFileLexer()->getFileEntry());
++  if (getCurrentFileLexer()->getFileEntry()) {
++    // Get the current file lexer we're looking at.  Ignore _Pragma 'files' etc.
++    // Mark the file as a once-only file now.
++    HeaderInfo.MarkFileIncludeOnce(getCurrentFileLexer()->getFileEntry());
++  }
+ }
+ 
+ void Preprocessor::HandlePragmaMark(Token &MarkTok) {
+-- 
+2.34.1
+

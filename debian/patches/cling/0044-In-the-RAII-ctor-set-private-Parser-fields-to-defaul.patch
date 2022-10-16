@@ -1,0 +1,28 @@
+From f101f2fb73f9cae3cae4e887c42dcc2c4d58edc4 Mon Sep 17 00:00:00 2001
+From: Axel Naumann <Axel.Naumann@cern.ch>
+Date: Mon, 7 Nov 2016 15:03:38 +0100
+Subject: [PATCH 44/57] In the RAII ctor, set private Parser fields to default
+ values.
+
+---
+ clang/lib/Sema/SemaCXXScopeSpec.cpp | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/clang/lib/Sema/SemaCXXScopeSpec.cpp b/clang/lib/Sema/SemaCXXScopeSpec.cpp
+index 1c8f6329bd67..5dfe5c0f299d 100644
+--- a/clang/lib/Sema/SemaCXXScopeSpec.cpp
++++ b/clang/lib/Sema/SemaCXXScopeSpec.cpp
+@@ -107,6 +107,10 @@ DeclContext *Sema::computeDeclContext(const CXXScopeSpec &SS,
+           // into that class template definition.
+           QualType Injected
+             = ClassTemplate->getInjectedClassNameSpecialization();
++
++          // Injected might not be canonical
++          Injected = Injected.getCanonicalType();
++
+           if (Context.hasSameType(Injected, ContextType))
+             return ClassTemplate->getTemplatedDecl();
+ 
+-- 
+2.34.1
+
