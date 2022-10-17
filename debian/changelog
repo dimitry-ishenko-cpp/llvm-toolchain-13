@@ -1,4 +1,4 @@
-llvm-toolchain-13 (2:13.0.1-7ppa1) unstable; urgency=medium
+llvm-toolchain-13 (2:13.0.1-7ppa1~ubuntu22.04) jammy; urgency=medium
 
   * Switch to epoch 2:
   * Add patches for cling
